@@ -24,6 +24,30 @@
 #include<stdlib.h>
 #include<time.h>
 
+struct patient
+{
+    /* data */
+    int patientID;
+    char patientName[50];
+    int patientAge;
+    char patientHistory[100];
+} Patients[50];
+
+struct  doctor
+{
+    /* data */
+    int doctorID;
+    char doctorName[50];
+};
+
+struct visitor
+{
+    /* data */
+    int visitorID;
+    char visitorName[50];
+    int visitingPatientID;
+};
+
 // Out-Patient Linked List
 struct outPatientPriorityList
 {
@@ -35,31 +59,30 @@ struct outPatientPriorityList
     struct outPatientPriorityList* next;
 };
 
+// In-Patient Linked List
+struct inPatientPriorityList
+{
+    /* data */
+    int positionID;
+    int patientID;
+    int roomID;
+    int doctorID;
+    int timeOfEntry;
+    struct inPatientPriorityList* next;
+};
 
-int main() {   
-    struct  doctor
+// Displaying details of a patient in Out-Patient queue
+void printOutPatientInfo (struct outPatientPriorityList* n) 
+{
+    while(n!= NULL) 
     {
-        /* data */
-        int doctorID;
-        char doctorName[50];
-    };
+        printf("Rank: %d\nPatient ID: %d\nPatient Name: %s\nPatient Age: %d\nDoctor ID: %s\nTime of Visit: %s", n->positionID, n->patientID, Patients[n->patientID].patientName, Patients[n->patientID].patientAge, n->doctorID, n->timeOfVisit);
+        n = n->next;
+    }
+}
 
-    struct patient
-    {
-        /* data */
-        int patientID;
-        char patientName[50];
-        int patientAge;
-    };
-    
-    struct visitor
-    {
-        /* data */
-        int visitorID;
-        char visitorName[50];
-        int visitingPatientID;
-    };
-    
+int main() 
+{    
     // Initializing patient ID counter
     int patientIDCounter = 0;
     // User choice variable
@@ -67,8 +90,10 @@ int main() {
     // Initializing time's object
     time_t t;
     time(&t);
-    // Clearing console
-    while(choice != 6) {
+    // Starting menu loop
+    while(choice != 6) 
+    {
+        // Clearing console
         printf("\e[1;1H\e[2J");
         printf("Wipro Hospital Management System\n-------------------------------\nTime: %s", ctime(&t));
         printf("\n1) Patient Registration \n2) Out-Patient \n3) In-Patient \n4) Patient History \n5) Doctor Details \n6) Exit \nEnter your choice: ");
@@ -79,15 +104,23 @@ int main() {
             case 1:
                 {
                     struct patient x;
+                    char name[50];
                     printf("Enter Patient Details\n--------------------------\nPatient Name: ");
-                    scanf("%s",x.patientName);
+                    // Removing leading new line in the buffer
+                    getchar();
+                    // Using fgets instead of gets due to security reasons
+                    fgets(x.patientName, sizeof(x.patientName), stdin);
+                    // Removing trailing new line from input
+                    x.patientName[strcspn(x.patientName, "\n")] = 0;
+                    // gets(x.patientName);
                     printf("Patient Age: ");
                     scanf("%d", &x.patientAge);
                     x.patientID = patientIDCounter;
-                    ++patientIDCounter;
+                    Patients[patientIDCounter] = x;
                     printf("\n--------------------------\nNew Patient Registered\n");
-                    printf("ID: %d \nName: %s \nAge: %d \n", x.patientID, x.patientName, x.patientAge);
-                    printf("\n\nPress ENTER to continue...");
+                    printf("ID: %d \nName: %s \nAge: %d \n", Patients[patientIDCounter].patientID, Patients[patientIDCounter].patientName, Patients[patientIDCounter].patientAge);
+                    ++patientIDCounter;
+                    printf("\n\nPress any key to continue...");
                     getch();
                     break;
                 }
