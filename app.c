@@ -38,7 +38,7 @@ struct  doctor
     /* data */
     int doctorID;
     char doctorName[50];
-};
+} Doctors[3];
 
 struct visitor
 {
@@ -79,6 +79,17 @@ void printOutPatientInfo (struct outPatientPriorityList* n)
         printf("Rank: %d\nPatient ID: %d\nPatient Name: %s\nPatient Age: %d\nDoctor ID: %s\nTime of Visit: %s", n->positionID, n->patientID, Patients[n->patientID].patientName, Patients[n->patientID].patientAge, n->doctorID, n->timeOfVisit);
         n = n->next;
     }
+}
+
+// Init Doctors
+void initDoctors () 
+{
+    Doctors[0].doctorID = 1;
+    Doctors[0].doctorName = "Dr. Kumar";
+    Doctors[1].doctorID = 2;
+    Doctors[1].doctorName = "Dr. Fernandez";
+    Doctors[2].doctorID = 3;
+    Doctors[2].doctorName = "Dr. Shaun Murphy";
 }
 
 int main() 
