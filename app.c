@@ -85,11 +85,11 @@ void printOutPatientInfo (struct outPatientPriorityList* n)
 void initDoctors () 
 {
     Doctors[0].doctorID = 1;
-    Doctors[0].doctorName = "Dr. Kumar";
+    strncpy(Doctors[0].doctorName, "Dr. Kumar", 50);
     Doctors[1].doctorID = 2;
-    Doctors[1].doctorName = "Dr. Fernandez";
+    strncpy(Doctors[1].doctorName, "Dr. House Fernandez", 50);
     Doctors[2].doctorID = 3;
-    Doctors[2].doctorName = "Dr. Shaun Murphy";
+    strncpy(Doctors[2].doctorName, "Dr. Shaun Murphy", 50);
 }
 
 int main() 
@@ -101,6 +101,8 @@ int main()
     // Initializing time's object
     time_t t;
     time(&t);
+    // Initializing doctors
+    initDoctors();
     // Starting menu loop
     while(choice != 6) 
     {
