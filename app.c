@@ -23,6 +23,7 @@
 #include<stdio.h>
 #include<conio.h>
 #include<stdlib.h>
+#include<string.h>
 #include<time.h>
 
 struct patient
@@ -47,7 +48,7 @@ struct visitor
     int visitorID;
     char visitorName[50];
     int visitingPatientID;
-};
+} Visitors[10];
 
 // Out-Patient Linked List
 struct outPatientPriorityList
@@ -147,12 +148,20 @@ void printAdmittedPatientInfo(struct inPatientPriorityList *n)
 void printAdmittedShortInfo()
 {
     struct inPatientPriorityList *n = first;
-    printf("\nPatients:");
-    while(n != NULL)
+    if(n == NULL)
     {
-        printf("\n%d: %s (Room: %d, Doctor: %s)\n", n->patientID, Patients[n->patientID].patientName, n->roomID, Doctors[n->doctorID].doctorName);
-        printf("-------------------------------");
-        n = n->next;
+        printf("No admitted patient details found. Press any key to continue...");
+        getch();
+    }
+    else
+    {
+        printf("\nPatients:");
+        while(n != NULL)
+        {
+            printf("\n%d: %s (Room: %d, Doctor: %s)\n", n->patientID, Patients[n->patientID].patientName, n->roomID, Doctors[n->doctorID].doctorName);
+            printf("-------------------------------");
+            n = n->next;
+        }
     }
 }
 
@@ -264,9 +273,21 @@ void addPatient(struct patient x, char currentTime[])
 
 void popOutPatient(struct outPatientPriorityList *n)
 {
-    head = head->next;
-    struct outPatientPriorityList *temp = n->next;
-    temp->prev = NULL;
+    int len = length();
+    if(len == 1)
+    {
+        n->prev = NULL;
+        n->next = NULL;
+        head = NULL;
+    }
+    else
+    {
+        struct outPatientPriorityList *temp = n->next;
+        temp->prev = NULL;
+        head = head->next;
+    }
+    
+    // printf("%d %s preserved", temp->patientID, Patients[temp->patientID].patientName);
 }
 
 void admitPatient(struct outPatientPriorityList *n)
@@ -274,26 +295,28 @@ void admitPatient(struct outPatientPriorityList *n)
     time_t t;
     time(&t);
     struct inPatientPriorityList *link = (struct inPatientPriorityList*) malloc(sizeof(struct inPatientPriorityList));
-    struct inPatientPriorityList *last = n;
+    struct inPatientPriorityList *last = first;
     link->patientID = n->patientID;
     link->doctorID = n->doctorID;
     strncpy(link->timeOfEntry, ctime(&t), 50);
-    link->roomID;
     link->next = NULL;
-    if(n == NULL)
+    if(first == NULL)
     {
         first = link;
         link->roomID = 0;
-        return;
     }
-    int roomCounter = 1;
-    while(last->next != NULL)
+    else
     {
-        ++roomCounter;
-        last = last->next;
+        int roomCounter = 1;
+        while(last->next != NULL)
+        {
+            ++roomCounter;
+            last = last->next;
+        }
+        link->roomID = roomCounter;
+        last->next = link;
     }
-    link->roomID = roomCounter;
-    last->next = link;
+    
     printf("\n%d: %s has been admitted to room %d under the supervision of %s.", link->patientID, Patients[link->patientID].patientName, link->roomID, Doctors[link->doctorID].doctorName);
 }
 
@@ -301,6 +324,8 @@ int main()
 {    
     // Initializing patient ID counter
     int patientIDCounter = 0;
+
+    int visitorCounter = 0;
 
     // User choice variable
     int choice = 0;
@@ -313,7 +338,7 @@ int main()
     initDoctors();
 
     // Starting menu loop
-    while(choice != 6) 
+    while(choice != 8) 
     {
         // Clearing console
         printf("\e[1;1H\e[2J");
@@ -359,59 +384,62 @@ int main()
                 {
                     printf("Out-Patient\n--------------------------\nPatient Details: \n");
                     printPatientInfo(head);
-                    if(Doctors[head->doctorID].doctorID == 0)
+                    if(head != NULL)
                     {
-                        printf("\nAssign a Doctor:\n");
-                        for(int i=1; i<4; i++)
+                        if(Doctors[head->doctorID].doctorID == 0)
                         {
-                            printf("%d: %s\n", Doctors[i].doctorID, Doctors[i].doctorName);
-                        }
-                        int id;
-                        printf("Enter Doctor ID: ");
-                        scanf("%d", &id);
-                        if(id<4 && id>=0)
-                        {
-                            head->doctorID = id;
+                            printf("\nAssign a Doctor:\n");
+                            for(int i=1; i<4; i++)
+                            {
+                                printf("%d: %s\n", Doctors[i].doctorID, Doctors[i].doctorName);
+                            }
+                            int id;
+                            printf("Enter Doctor ID: ");
+                            scanf("%d", &id);
+                            if(id<4 && id>=0)
+                            {
+                                head->doctorID = id;
+                            }
+                            else
+                            {
+                                printf("Invalid Response. Press any key to return to the main menu...");
+                                getch();
+                            }
                         }
                         else
                         {
-                            printf("Invalid Response. Press any key to return to the main menu...");
-                            getch();
-                        }
-                    }
-                    else
-                    {
-                        int choice;
-                        printf("\n1. Admit Patient\n2. Release\n3. Exit\nEnter your choice: ");
-                        scanf("%d", &choice);
-                        switch(choice)
-                        {
-                            case 1: 
-                                {
-                                    admitPatient(head);
-                                    popOutPatient(head);
-                                    getch();
-                                    break;
-                                }
+                            int choice;
+                            printf("\n1. Admit Patient\n2. Release\n3. Exit\nEnter your choice: ");
+                            scanf("%d", &choice);
+                            switch(choice)
+                            {
+                                case 1: 
+                                    {
+                                        admitPatient(head);
+                                        popOutPatient(head);
+                                        getch();
+                                        break;
+                                    }
 
-                            case 2: 
-                                {
-                                    printf("%d: %s released. Press any key to continue...", head->patientID, Patients[head->patientID].patientName);
-                                    popOutPatient(head);
-                                    getch();
-                                    break;
-                                }
+                                case 2: 
+                                    {
+                                        printf("%d: %s released. Press any key to continue...", head->patientID, Patients[head->patientID].patientName);
+                                        popOutPatient(head);
+                                        getch();
+                                        break;
+                                    }
 
-                            case 3:
-                                {
-                                    break;
-                                }
+                                case 3:
+                                    {
+                                        break;
+                                    }
 
-                            default:
-                                {
-                                    printf("Invalid Response. Press any key to continue...");
-                                    getch();
-                                }
+                                default:
+                                    {
+                                        printf("Invalid Response. Press any key to continue...");
+                                        getch();
+                                    }
+                            }
                         }
                     }
                     break;
@@ -419,161 +447,174 @@ int main()
             case 3:
                 {
                     int choice;
-                    printf("In-Patient\n--------------------------\n1) Admitted Patient Details\n2) Update Patient History\n3) Reassign Room\n4) Reassign Doctor\n5) Discharge Patient\n6) Exit\nEnter your choice: ");
-                    scanf("%d", &choice);
-                    switch (choice)
+                    printf("In-Patient\n--------------------------\n");
+                    if(first != NULL)
                     {
-                        case 1:
-                            {
-                                printAdmittedPatientInfo(first);
-                                printf("\nPress any key to continue...");
-                                getch();
-                                break;
-                            }
-
-                        case 2:
-                            {
-                                int id;
-                                printAdmittedShortInfo();
-                                printf("Enter Patient ID: ");
-                                scanf("%d", &id);
-                                struct inPatientPriorityList *n = first;
-                                printf("\nDetails:");
-                                while(n != NULL)
+                        printf("1) Admitted Patient Details\n2) Update Patient History\n3) Reassign Room\n4) Reassign Doctor\n5) Discharge Patient\n6) Exit\nEnter your choice: ");
+                        scanf("%d", &choice);
+                        printf("\n--------------------------\n");
+                        switch (choice)
+                        {
+                            case 1:
                                 {
-                                    if(id == n->patientID)
-                                    {
-                                        printf("\nPatient ID: %d\nPatient Name: %s\nPatient Age: %d\nDoctor: %s\nPatient History: %s\nTime of Visit: %s", n->patientID, Patients[n->patientID].patientName, Patients[n->patientID].patientAge, Doctors[n->doctorID].doctorName, Patients[n->patientID].patientHistory, n->timeOfEntry);
-                                        printf("-------------------------------");
-                                        break;
-                                    }
-                                    n = n->next;
-                                }
-                                char story[100];
-                                printf("\nEnter Updated Patient History: ");
-                                // Using fgets instead of gets due to security reasons
-                                fgets(story, sizeof(story), stdin);
-                                // Removing trailing new line from input
-                                story[strcspn(story, "\n")] = 0;
-                                strncpy(Patients[n->patientID].patientHistory, story, 100);          
-                                printf("\nPatient History updated. Press any key to continue...");
-                                getch();
-                                break;
-                            }
-                        
-                        case 3:
-                            {
-                                int id;
-                                printAdmittedShortInfo();
-                                printf("Enter Patient ID: ");
-                                scanf("%d", &id);
-                                struct inPatientPriorityList *n = first;
-                                printf("\nDetails:");
-                                while(n != NULL)
-                                {
-                                    if(id == n->patientID)
-                                    {
-                                        printf("\nPatient ID: %d\nPatient Name: %s\nPatient Age: %d\nDoctor: %s\nPatient History: %s\nTime of Visit: %s", n->patientID, Patients[n->patientID].patientName, Patients[n->patientID].patientAge, Doctors[n->doctorID].doctorName, Patients[n->patientID].patientHistory, n->timeOfEntry);
-                                        printf("-------------------------------");
-                                        break;
-                                    }
-                                    n = n->next;
-                                }
-                                int roomID;
-                                printf("\nEnter New Room ID: ");
-                                scanf("%d", &roomID);
-                                n->roomID = roomID;
-                                printf("\nPatient Room Updated. Press any key to continue...");
-                                getch();
-                                break;
-                            }
-
-                        case 4:
-                            {
-                                int id;
-                                printAdmittedShortInfo();
-                                printf("Enter Patient ID: ");
-                                scanf("%d", &id);
-                                struct inPatientPriorityList *n = first;
-                                printf("\nDetails:");
-                                while(n != NULL)
-                                {
-                                    if(id == n->patientID)
-                                    {
-                                        printf("\nPatient ID: %d\nPatient Name: %s\nPatient Age: %d\nDoctor: %s\nPatient History: %s\nTime of Visit: %s", n->patientID, Patients[n->patientID].patientName, Patients[n->patientID].patientAge, Doctors[n->doctorID].doctorName, Patients[n->patientID].patientHistory, n->timeOfEntry);
-                                        printf("-------------------------------");
-                                        break;
-                                    }
-                                    n = n->next;
-                                }
-                                for(int i=1; i<4; i++)
-                                {
-                                    printf("%d: %s\n", Doctors[i].doctorID, Doctors[i].doctorName);
-                                }
-                                int doctorID;
-                                printf("Enter Doctor ID: ");
-                                scanf("%d", &doctorID);
-                                if(doctorID<4 && doctorID>=0)
-                                {
-                                    n->doctorID = doctorID;
-                                }
-                                else
-                                {
-                                    printf("Invalid Response. Press any key to return to the main menu...");
+                                    printAdmittedPatientInfo(first);
+                                    printf("\nPress any key to continue...");
                                     getch();
+                                    break;
                                 }
-                                break;
-                            }
 
-                        case 5:
-                            {
-                                int id;
-                                printAdmittedShortInfo();
-                                printf("Enter Patient ID: ");
-                                scanf("%d", &id);
-                                struct inPatientPriorityList *n = first;
-                                printf("\nDetails:");
-                                while(n != NULL)
+                            case 2:
                                 {
-                                    if(id == n->patientID)
+                                    int id;
+                                    printAdmittedShortInfo();
+                                    printf("\nEnter Patient ID: ");
+                                    scanf("%d", &id);
+                                    struct inPatientPriorityList *n = first;
+                                    printf("\nDetails:");
+                                    while(n != NULL)
                                     {
-                                        printf("\nPatient ID: %d\nPatient Name: %s\nPatient Age: %d\nDoctor: %s\nPatient History: %s\nTime of Visit: %s", n->patientID, Patients[n->patientID].patientName, Patients[n->patientID].patientAge, Doctors[n->doctorID].doctorName, Patients[n->patientID].patientHistory, n->timeOfEntry);
-                                        printf("-------------------------------");
-                                        break;
-                                    }
-                                    n = n->next;
-                                }
-                                printf("\nDischarge Patient? \n1) Yes\n2) No");
-                                int dischargeChoice;
-                                scanf("%d", &dischargeChoice);
-                                if(dischargeChoice == 1)
-                                {
-                                    struct inPatientPriorityList *t = first;
-                                    while(t != NULL)
-                                    {
-                                        if(t->next->patientID == id)
+                                        if(id == n->patientID)
                                         {
-                                            t->next = n->next;
+                                            printf("\nPatient ID: %d\nPatient Name: %s\nPatient Age: %d\nDoctor: %s\nPatient History: %s\nTime of Visit: %s", n->patientID, Patients[n->patientID].patientName, Patients[n->patientID].patientAge, Doctors[n->doctorID].doctorName, Patients[n->patientID].patientHistory, n->timeOfEntry);
+                                            printf("-------------------------------");
                                             break;
                                         }
-                                        t = t->next;
+                                        n = n->next;
                                     }
-                                    printf("\nPatient Discharged. Press any key to continue...");
+                                    char story[100];
+                                    getchar();
+                                    printf("\nEnter Updated Patient History: ");
+                                    // Using fgets instead of gets due to security reasons
+                                    fgets(story, sizeof(story), stdin);
+                                    // Removing trailing new line from input
+                                    story[strcspn(story, "\n")] = 0;
+                                    strncpy(Patients[n->patientID].patientHistory, story, 100);          
+                                    printf("\nPatient History updated. Press any key to continue...");
                                     getch();
+                                    break;
                                 }
+                            
+                            case 3:
+                                {
+                                    int id;
+                                    printAdmittedShortInfo();
+                                    printf("\nEnter Patient ID: ");
+                                    scanf("%d", &id);
+                                    struct inPatientPriorityList *n = first;
+                                    printf("\nDetails:");
+                                    while(n != NULL)
+                                    {
+                                        if(id == n->patientID)
+                                        {
+                                            printf("\nPatient ID: %d\nPatient Name: %s\nPatient Age: %d\nDoctor: %s\nPatient History: %s\nTime of Visit: %s", n->patientID, Patients[n->patientID].patientName, Patients[n->patientID].patientAge, Doctors[n->doctorID].doctorName, Patients[n->patientID].patientHistory, n->timeOfEntry);
+                                            printf("-------------------------------");
+                                            break;
+                                        }
+                                        n = n->next;
+                                    }
+                                    int roomID;
+                                    printf("\nEnter New Room ID: ");
+                                    scanf("%d", &roomID);
+                                    n->roomID = roomID;
+                                    printf("\nPatient Room Updated. Press any key to continue...");
+                                    getch();
+                                    break;
+                                }
+
+                            case 4:
+                                {
+                                    int id;
+                                    printAdmittedShortInfo();
+                                    printf("\nEnter Patient ID: ");
+                                    scanf("%d", &id);
+                                    struct inPatientPriorityList *n = first;
+                                    printf("\nPatient Details:");
+                                    while(n != NULL)
+                                    {
+                                        if(id == n->patientID)
+                                        {
+                                            printf("\nPatient ID: %d\nPatient Name: %s\nPatient Age: %d\nDoctor: %s\nPatient History: %s\nTime of Visit: %s", n->patientID, Patients[n->patientID].patientName, Patients[n->patientID].patientAge, Doctors[n->doctorID].doctorName, Patients[n->patientID].patientHistory, n->timeOfEntry);
+                                            printf("-------------------------------\n");
+                                            break;
+                                        }
+                                        n = n->next;
+                                    }
+                                    for(int i=1; i<4; i++)
+                                    {
+                                        printf("%d: %s\n", Doctors[i].doctorID, Doctors[i].doctorName);
+                                    }
+                                    int doctorID;
+                                    printf("Enter Doctor ID: ");
+                                    scanf("%d", &doctorID);
+                                    if(doctorID<4 && doctorID>=0)
+                                    {
+                                        n->doctorID = doctorID;
+                                    }
+                                    else
+                                    {
+                                        printf("Invalid Response. Press any key to return to the main menu...");
+                                        getch();
+                                    }
+                                    break;
+                                }
+
+                            case 5:
+                                {
+                                    int id;
+                                    printAdmittedShortInfo();
+                                    printf("\nEnter Patient ID: ");
+                                    scanf("%d", &id);
+                                    struct inPatientPriorityList *n = first;
+                                    printf("\nDetails:");
+                                    while(n != NULL)
+                                    {
+                                        if(id == n->patientID)
+                                        {
+                                            printf("\nPatient ID: %d\nPatient Name: %s\nPatient Age: %d\nDoctor: %s\nPatient History: %s\nTime of Visit: %s", n->patientID, Patients[n->patientID].patientName, Patients[n->patientID].patientAge, Doctors[n->doctorID].doctorName, Patients[n->patientID].patientHistory, n->timeOfEntry);
+                                            printf("-------------------------------");
+                                            break;
+                                        }
+                                        n = n->next;
+                                    }
+                                    printf("\nDischarge Patient? \n1) Yes\n2) No\nEnter your choice: ");
+                                    int dischargeChoice;
+                                    scanf("%d", &dischargeChoice);
+                                    if(dischargeChoice == 1)
+                                    {
+                                        struct inPatientPriorityList *t = first;
+                                        struct inPatientPriorityList *temporary;
+                                        while(t != NULL)
+                                        {
+                                            temporary = t->next;
+                                            if(temporary->patientID == id)
+                                            {
+                                                t->next = n->next;
+                                                break;
+                                            }
+                                            t = t->next;
+                                        }
+                                        printf("\nPatient Discharged. Press any key to continue...");
+                                        getch();
+                                    }
+                                    break;
+                                }
+
+                            default:
                                 break;
-                            }
-
-                        default:
-                            break;
+                        }
                     }
-
+                    else
+                    {
+                        printf("\nNo admitted patient details found. Press any key to continue...");
+                        getch();
+                    }
+                    break;
                 }
 
             case 4:
                 {
                     printf("\e[1;1H\e[2J");
-                    printf("Patient Details\n--------------------------\n1) Out-Patient\n2) In-Patient");
+                    printf("Patient Details\n--------------------------\n1) Out-Patient\n2) In-Patient\nEnter your choice: ");
                     int infoChoice;
                     scanf("%d", &infoChoice);
                     switch (infoChoice)
@@ -600,6 +641,185 @@ int main()
                     break;
                 }
 
+            case 5:
+                {
+                    int visitorChoice;
+                    printf("Visitor Check-In\n--------------------------\n");
+                    if(first != NULL)
+                    {
+                        printf("1) Add Visitor \n2) Check Current Patient Visitor Count \n3) Exit \nEnter your choice: ");
+                        scanf("%d", &visitorChoice);
+                        switch (visitorChoice)
+                        {
+                        case 1:
+                            {
+                                if(visitorCounter < 10)
+                                {
+                                    printAdmittedShortInfo();
+                                    Visitors[visitorCounter].visitorID = visitorCounter;
+                                    printf("\nEnter Patient ID: ");
+                                    int tempID;
+                                    char nameVisitor[50];
+                                    scanf("%d", &tempID);
+                                    Visitors[visitorCounter].visitingPatientID = tempID;
+                                    printf("Enter Visitor Name: ");
+                                    getchar();
+                                    // Using fgets instead of gets due to security reasons
+                                    fgets(nameVisitor, sizeof(nameVisitor), stdin);
+                                    // Removing trailing new line from input
+                                    nameVisitor[strcspn(nameVisitor, "\n")] = 0;
+                                    strncpy(Visitors[visitorCounter].visitorName, nameVisitor, 50);
+                                    ++visitorCounter;
+                                }
+                                else
+                                {
+                                    printf("Visitor Capacity Reached. Please try again later! Press any key to continue...");
+                                    getch();
+                                }
+                                break;
+                            }
+                        
+                        case 2:
+                            {
+                                int flag, visitorCheckID, count = 0;
+                                printAdmittedShortInfo();
+                                printf("\nEnter Patient ID: ");
+                                scanf("%d", &visitorCheckID);
+                                for(int i=0; i<10; i++)
+                                {
+                                    if(visitorCheckID == Visitors[i].visitingPatientID)
+                                    {
+                                        ++count;
+                                        flag = 1;
+                                    }
+                                }
+                                if(!flag)
+                                {
+                                    printf("No matches. Press any key to continue...");
+                                    getch();
+                                }
+                                else
+                                {
+                                    printf("\nThere are %d visitors for patient %s.\nPress any key to continue...", count, Patients[visitorCheckID].patientName);
+                                    getch();
+                                }
+                                break;
+                            }
+                        
+                        default:
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        printf("\nNo admitted patient details found. Press any key to continue...");
+                        getch();
+                    }
+                    break;
+                }
+
+            case 6:
+                {
+                    int reportChoice;
+                    printf("Day Report\n--------------------------\n1) Out-Patient \n2) In-Patient \n3) Exit \nEnter your choice: ");
+                    scanf("%d", &reportChoice);
+                    switch (reportChoice)
+                    {
+                    case 1:
+                        {
+                            if(head != NULL)
+                            {
+                                int counter = 0;
+                                for(struct outPatientPriorityList *i = head; i != NULL; i = i->next) 
+                                {
+                                    printf("\n%s------------------------------\n%d: %s - %s\n", i->timeOfVisit, Patients[i->patientID].patientID, Patients[i->patientID].patientName, Doctors[i->doctorID].doctorName);
+                                }
+                            }
+                            else
+                            {
+                                printf("\nNo patient data found. Press any key to continue...");
+                            }
+                            getch();
+                            break;    
+                        }
+
+                    case 2:
+                        {
+                            if(head != NULL)
+                            {
+                                int counter = 0;
+                                for(struct inPatientPriorityList *i = first; i != NULL; i = i->next) 
+                                {
+                                    printf("\n%s------------------------------\n%d: %s - %s, Room: %d\n", i->timeOfEntry, Patients[i->patientID].patientID, Patients[i->patientID].patientName, Doctors[i->doctorID].doctorName, i->roomID);
+                                }
+                            }
+                            else
+                            {
+                                printf("\nNo patient data found. Press any key to continue...");
+                            }
+                            getch();
+                            break;    
+                        }
+                    
+                    
+                    default:
+                        break;
+                    }
+                    break;
+                }
+
+            case 7:
+                {
+                    int doctorChoice;
+                    printf("Doctor Report\n--------------------------\nDoctors:\n");
+                    for(int i=1; i<4; i++)
+                    {
+                        printf("%d: %s\n", Doctors[i].doctorID, Doctors[i].doctorName);
+                    }
+                    printf("Enter Doctor ID: ");
+                    scanf("%d", &doctorChoice);
+                    if(doctorChoice<4 && doctorChoice>=0)
+                    {
+                        struct outPatientPriorityList *x = head;
+                        struct inPatientPriorityList *t = first;
+                        int iflag = 0, oflag = 0;
+                        printf("\nOut-Patients:\n");
+                        while(x != NULL)
+                        {
+                            if(x->doctorID == doctorChoice)
+                            {
+                                printf("\n%d: %s", x->patientID, Patients[x->patientID].patientName);
+                                oflag = 1;
+                            }
+                            x = x->next;
+                        }
+                        if(oflag == 0)
+                        {
+                            printf("\n%s does not have any Out-Patients right now.", Doctors[doctorChoice].doctorName);
+                        }
+                        printf("\n-------------\n\nIn-Patients:\n");
+                        while(t != NULL)
+                        {
+                            if(t->doctorID == doctorChoice)
+                            {
+                                printf("\n%d: %s (Room: %d)", t->patientID, Patients[t->patientID].patientName, t->roomID);
+                                iflag = 1;
+                            }
+                            t = t->next;
+                        }
+                        if(iflag == 0)
+                        {
+                            printf("\n%s does not have any In-Patients right now.", Doctors[doctorChoice].doctorName);
+                        }
+
+                    }
+                    else
+                    {
+                        printf("\nInvalid Response. Press any key to return to the main menu...");
+                    }
+                    getch();
+                    break;
+                }
             default:
                 break;
         }
