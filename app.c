@@ -585,6 +585,11 @@ int main()
                                         struct inPatientPriorityList *temporary;
                                         while(t != NULL)
                                         {
+                                            if(t->next == NULL)
+                                            {
+                                                first = NULL;
+                                                break;
+                                            }
                                             temporary = t->next;
                                             if(temporary->patientID == id)
                                             {
